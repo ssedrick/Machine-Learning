@@ -3,11 +3,13 @@ import random
 import numpy as np
 from hardCoded import HardCoded
 
-def check_accuracy(predicted, actual):
-    if predicted == actual:
+
+def check_accuracy(guess, real):
+    if guess == real:
         return 1
     else:
         return 0
+
 
 iris = datasets.load_iris()
 
@@ -23,7 +25,6 @@ targetArray = np.asarray(targetList)
 
 # Split arrays by length * 70%
 dataSplit = int(len(dataArray) * 0.7)
-print(dataSplit)
 
 # Split data
 trainingData = dataArray[:dataSplit]

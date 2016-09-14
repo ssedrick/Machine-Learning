@@ -39,11 +39,10 @@ tester.train(trainingData, trainingTarget)
 
 result = tester.predict(testData)
 
-# Show result
-print(result)
-
+# Count the number right
 numRight = 0
 for predicted, actual in zip(result, testTarget):
     numRight += check_accuracy(predicted, actual)
 
+# Show Accuracy
 print("Accuracy: %0.2f" % (numRight / len(testTarget)))

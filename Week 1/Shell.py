@@ -13,13 +13,13 @@ def check_accuracy(guess, real):
 
 
 def get_split_percentage():
-    percent = 0
-    while percent < 100 and percent > 0:
-        percent = input("What percentage of the dataset should be used for training? ")
-        if percent < 100 and percent > 0:
-            print("Sorry, I need a number between 100 and 0")
+    percent = -1
+    while not(0 < percent < 100):
+        percent = float(input("What percentage of the dataset should be used for training? "))
+        if not(0 < percent < 100):
+            print("Sorry, I need a number between 0 and 100. It can have a decimal.")
 
-    return float(percent) / 100
+    return percent / 100
 
 
 def main(args):
@@ -58,7 +58,7 @@ def main(args):
         num_right += check_accuracy(predicted, actual)
 
     # Show Accuracy
-    print("Accuracy: %2.2f%%" % (num_right / len(test_target)))
+    print("Accuracy: %2.2f%%" % (num_right * 100 / len(test_target)))
 
 if __name__ == "__main__":
     main(sys.argv)

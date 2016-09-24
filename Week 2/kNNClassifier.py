@@ -12,7 +12,9 @@ class KNNClassifier(object):
         self.targets = targets
 
     def predict(self, inputs):
+        # Gets 'shape' of input
         n_inputs = np.shape(inputs)[0]
+        # Create zeroed array of same shape
         closest = np.zeros(n_inputs)
 
         for n in range(n_inputs):

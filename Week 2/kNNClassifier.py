@@ -19,7 +19,7 @@ class KNNClassifier(object):
 
         for n in range(n_inputs):
             # Compute Distances
-            distances = np.sum((self.data-inputs[n, :])**2, axis=1)
+            distances = np.sum((self.data-inputs[n])**2, axis=1)
 
             indices = np.argsort(distances, axis=0)
 

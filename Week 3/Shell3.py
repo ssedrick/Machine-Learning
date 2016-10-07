@@ -1,4 +1,3 @@
-import sys
 import pandas as pd
 import random
 import numpy as np
@@ -42,7 +41,26 @@ def load_car_dataset():
     return data
 
 
+def load_votes_csv():
+    df = pd.read_csv('votes.csv', header=None)
+    votes = df.values
+    data = SourceData()
+    data.target, data.data = votes[:, 0], votes[:, 1:]
+    return data
+
+
+def load_loans_csv():
+    df = pd.read_csv('loans.csv')
+    loans = df.values
+    data = SourceData()
+    data.data, data.target = loans[:, :4], loans[:, 4]
+    return data
+
+
 def get_dataset():
+    return load_loans_csv()
+    # return load_votes_csv()
+    """
     i = input("Which dataset should I load? [1] Iris, [2] Cars, [3] Breast Cancer ")
     if i == '1' or i.lower == 'iris':
         return datasets.load_iris()
@@ -52,9 +70,10 @@ def get_dataset():
 
     if i == '3' or i.lower in 'breast cancer':
         return datasets.load_breast_cancer()
+    """
 
 
-def main(args):
+def main():
     source = get_dataset()
 
     # Shuffle the data and target together
@@ -78,12 +97,11 @@ def main(args):
     training_target = target_array[:data_split]
     test_target = target_array[data_split:]
 
-    k = int(input("How many neighbors should we use? "))
-
     # Test with our classifier
-    tester = KNNClassifier(k)
+    tester = DecisionTree()
     tester.train(training_data, training_target)
 
+    """
     result = tester.predict(test_data)
 
     # Count the number right
@@ -93,6 +111,7 @@ def main(args):
 
     # Show Accuracy
     print("Accuracy: %2.2f%%" % (num_right * 100 / len(test_target)))
+    """
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

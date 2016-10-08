@@ -30,14 +30,9 @@ def get_split_percentage():
 
 def load_car_dataset():
     df = pd.read_csv('cars.csv')
-    df = df.replace('vhigh', 4).replace('high', 3).replace('med', 2).replace('low', 1)
-    df = df.replace('5more', 6).replace('more', 5)
-    df = df.replace('small', 1).replace('med', 2).replace('big', 3)
-    df = df.replace('unacc', 1).replace('acc', 2).replace('good', 3).replace('vgood', 4)
     car = df.values
     data = SourceData()
     data.data, data.target = car[:, :6], car[:, 6]
-    data.data, data.target = data.data.astype(int), data.target.astype(int)
     return data
 
 
@@ -58,10 +53,10 @@ def load_loans_csv():
 
 
 def load_lenses_csv():
-    df = pd.read_csv('votes.csv', header=None)
+    df = pd.read_csv('lenses.csv', header=None)
     votes = df.values
     data = SourceData()
-    data.target, data.data = votes[:, 0], votes[:, 1:]
+    data.target, data.data = votes[:, 4], votes[:, :4]
     return data
 
 
@@ -73,7 +68,7 @@ def get_dataset():
     if i == '2' or i.lower == 'cars':
         return load_car_dataset()
 
-    if i == '3' or i.lower in 'breast cancer':
+    if i == '3' or i.lower == 'breast cancer':
         return datasets.load_breast_cancer()
 
     if i == '4' or i.lower == 'votes':
@@ -110,6 +105,7 @@ def main():
     training_target = target_array[:data_split]
     test_target = target_array[data_split:]
 
+    print("Building the tree...")
     # Test with our classifier
     tester = DecisionTree()
     tester.train(training_data, training_target)
@@ -125,6 +121,8 @@ def main():
 
     # Show Accuracy
     print("Accuracy: %2.2f%%" % (num_right * 100 / len(test_target)))
+
+    tester.print()
 
 if __name__ == "__main__":
     main()

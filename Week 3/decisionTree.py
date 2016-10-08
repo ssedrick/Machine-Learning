@@ -8,6 +8,16 @@ class Node(object):
         self.data = None
         self.branches = None
 
+    def __str__(self, level=0):
+        ret = "|---" * level + repr(self.data) + "\n"
+        if self.branches is not None:
+            for branch in self.branches:
+                ret += self.branches[branch].__str__(level + 1)
+        return ret
+
+    def __repr__(self):
+        return '<tree node>'
+
 
 class DecisionTree(object):
     def __init__(self):
@@ -48,10 +58,10 @@ class DecisionTree(object):
     def build_tree(self, node, df, features, attributes):
         if len(np.unique(df["targets"])) == 1:
             node.data = np.unique(df["targets"])[0]
-            print("Trimmed down to just one target! ", node.data)
+            # print("Trimmed down to just one target! ", node.data)
         elif len(features) == 1:
             node.data = self.pick_leaf(df, df["targets"])
-            print("Run out of features: ", node.data)
+            # print("Run out of features: ", node.data)
         else:
             # We still have features to look at
             entropies = self.calc_entropies(df, features, attributes)
@@ -135,3 +145,6 @@ class DecisionTree(object):
 
     def predict(self, data):
         return self.traverse(self.Tree, data)
+
+    def print(self):
+        print(self.Tree)

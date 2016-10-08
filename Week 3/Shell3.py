@@ -57,11 +57,16 @@ def load_loans_csv():
     return data
 
 
+def load_lenses_csv():
+    df = pd.read_csv('votes.csv', header=None)
+    votes = df.values
+    data = SourceData()
+    data.target, data.data = votes[:, 0], votes[:, 1:]
+    return data
+
+
 def get_dataset():
-    return load_loans_csv()
-    # return load_votes_csv()
-    """
-    i = input("Which dataset should I load? [1] Iris, [2] Cars, [3] Breast Cancer ")
+    i = input("Which dataset should I load? [1] Iris, [2] Cars, [3] Breast Cancer, [4] Votes, [5] Loans, [6] Lenses ")
     if i == '1' or i.lower == 'iris':
         return datasets.load_iris()
 
@@ -70,7 +75,15 @@ def get_dataset():
 
     if i == '3' or i.lower in 'breast cancer':
         return datasets.load_breast_cancer()
-    """
+
+    if i == '4' or i.lower == 'votes':
+        return load_votes_csv()
+
+    if i == '5' or i.lower == 'loans':
+        return load_loans_csv()
+
+    if i == '6' or i.lower == 'lenses':
+        return load_lenses_csv()
 
 
 def main():
@@ -101,8 +114,9 @@ def main():
     tester = DecisionTree()
     tester.train(training_data, training_target)
 
-    """
-    result = tester.predict(test_data)
+    result = []
+    for i in range(len(test_data)):
+        result.append(tester.predict(test_data[i]))
 
     # Count the number right
     num_right = 0
@@ -111,7 +125,6 @@ def main():
 
     # Show Accuracy
     print("Accuracy: %2.2f%%" % (num_right * 100 / len(test_target)))
-    """
 
 if __name__ == "__main__":
     main()

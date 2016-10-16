@@ -1,6 +1,5 @@
 import pandas as pd
 import random
-import numpy as np
 from sklearn import datasets
 from neuralNetwork import NeuralNet
 
@@ -68,6 +67,24 @@ def load_lenses_csv():
     return data
 
 
+def load_pima_csv():
+    df = pd.read_csv('pima.csv')
+    pima = df.values
+    data = SourceData()
+    data.data, data.target = pima[:, :8], pima[:, 8]
+    target = []
+    data_list = []
+    for i in range(len(data.target)):
+        if data.target[i] == 0:
+            target.append([0, 0, 1, 1])
+        else:
+            target.append([1, 1, 0, 0])
+        data_list.append(list(data.data[i]))
+    data.target = target
+    data.data = data_list
+    return data
+
+
 def load_iris():
     iris = datasets.load_iris()
     targets = []
@@ -86,7 +103,7 @@ def load_iris():
 
 
 def get_dataset():
-    i = input("Which dataset should I load? [1] Iris, [2] Cars, [3] Breast Cancer, [4] Votes, [5] Loans, [6] Lenses ")
+    i = input("Which dataset should I load? [1] Iris, [2] Cars, [3] Breast Cancer, [4] Votes, [5] Loans, [6] Lenses, [7] Pima ")
     if i == '1' or i.lower == 'iris':
         return load_iris()
 
@@ -104,6 +121,10 @@ def get_dataset():
 
     if i == '6' or i.lower == 'lenses':
         return load_lenses_csv()
+
+    if i == '7' or i.lower == 'pima':
+        return load_pima_csv()
+
 
 
 def main():
@@ -129,7 +150,9 @@ def main():
     test_target = target_list[data_split:]
 
     # Test with our classifier
-    tester = NeuralNet([3], num_inputs=4, learning_rate=get_learning_rate(NeuralNet.get_default_learning_rate()))
+    tester = NeuralNet([len(training_target[0])],
+                       num_inputs=len(training_data),
+                       learning_rate=get_learning_rate(NeuralNet.get_default_learning_rate()))
     print(tester)
     tester.train(data=training_data, targets=training_target)
     print(tester)

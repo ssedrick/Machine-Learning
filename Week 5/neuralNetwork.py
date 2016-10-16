@@ -92,7 +92,6 @@ class NeuralNet(object):
             layer_output = []
             data[row].append(self.bias)
             for layer in range(len(self.network)):
-                print("Layer ", layer, " output: ")
                 layer_output.append([])
                 while self.check_output(layer_output[layer], targets[row]) is False:
                     layer_output[layer] = []
@@ -100,8 +99,6 @@ class NeuralNet(object):
                         layer_output[layer].append(
                             neuron.process(data[row] if layer is 0 else layer_output[(layer - 1)],
                                            targets[row][index] if layer is 0 else -1))
-
-            print(layer_output[len(layer_output) - 1], ": ", targets[row], "\n")
 
     def predict(self, data):
         output = []

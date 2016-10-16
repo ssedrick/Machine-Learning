@@ -2,7 +2,7 @@ import pandas as pd
 import random
 import numpy as np
 from sklearn import datasets
-from decisionTree import DecisionTree
+from neuralNetwork import NeuralNet
 
 
 class SourceData:
@@ -62,17 +62,16 @@ def load_lenses_csv():
 
 def load_iris():
     iris = datasets.load_iris()
-    df = pd.DataFrame(iris.data, columns=iris.feature_names)
-    maximum = df.max()
-    minimum = df.min()
-    differences = datasets.base.Bunch()
-    for i in iris.feature_names:
-        differences[i] = (maximum[i] - minimum[i]) / 2
-        df[i][df[i] < minimum[i] + differences[i]] = minimum[i]
-        df[i][df[i] > maximum[i] - differences[i]] = maximum[i]
-
+    targets = []
+    for i in range(len(iris.target)):
+        if iris.target[i] == 0:
+            targets.append([1, 0, 0])
+        elif iris.target[i] == 1:
+            targets.append([0, 1, 0])
+        else:
+            targets.append([0, 0, 1])
     data = SourceData()
-    data.data, data.target = df.values, np.asarray(iris.target)
+    data.data, data.target = np.asarray(iris.data), np.asarray(targets)
     return data
 
 
@@ -106,39 +105,35 @@ def main():
     random.shuffle(shuffled)
 
     # Separate out data and target
-    data_list, target_list = zip(*shuffled)
-    data_array = np.asarray(data_list)
-    target_array = np.asarray(target_list)
+    data_list, target_list = list(zip(*shuffled))
 
     # Split arrays by length * percentage
-    data_split = int(len(data_array) * get_split_percentage())
+    data_split = int(len(data_list) * get_split_percentage())
 
     # Split data
-    training_data = data_array[:data_split]
-    test_data = data_array[data_split:]
+    training_data = data_list[:data_split]
+    test_data = data_list[data_split:]
 
     # Split target
-    training_target = target_array[:data_split]
-    test_target = target_array[data_split:]
+    training_target = target_list[:data_split]
+    test_target = target_list[data_split:]
 
     print("Building the tree...")
     # Test with our classifier
-    tester = DecisionTree()
-    tester.train(training_data, training_target)
+    tester = NeuralNet([3], num_inputs=4)
+    print(tester)
+    tester.train(data=training_data, targets=training_target)
+    print(tester)
 
-    result = []
-    for i in range(len(test_data)):
-        result.append(tester.predict(test_data[i]))
+    result = tester.predict(test_data)
 
     # Count the number right
     num_right = 0
     for predicted, actual in zip(result, test_target):
-        num_right += check_accuracy(predicted, actual)
+        num_right += 1 if tester.check_output(predicted, actual) else 0
 
     # Show Accuracy
     print("Accuracy: %2.2f%%" % (num_right * 100 / len(test_target)))
-
-    tester.print()
 
 if __name__ == "__main__":
     main()

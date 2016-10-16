@@ -28,6 +28,14 @@ def get_split_percentage():
     return percent / 100
 
 
+def get_learning_rate(default):
+    rate = input("How fast do you want the network to learn? ")
+    if rate is not "":
+        return float(rate)
+    else:
+        return default
+
+
 def load_car_dataset():
     df = pd.read_csv('cars.csv')
     car = df.values
@@ -63,6 +71,7 @@ def load_lenses_csv():
 def load_iris():
     iris = datasets.load_iris()
     targets = []
+    data_list = []
     for i in range(len(iris.target)):
         if iris.target[i] == 0:
             targets.append([1, 0, 0])
@@ -70,8 +79,9 @@ def load_iris():
             targets.append([0, 1, 0])
         else:
             targets.append([0, 0, 1])
+        data_list.append(list(iris.data[i]))
     data = SourceData()
-    data.data, data.target = np.asarray(iris.data), np.asarray(targets)
+    data.data, data.target = data_list, targets
     return data
 
 
@@ -118,9 +128,8 @@ def main():
     training_target = target_list[:data_split]
     test_target = target_list[data_split:]
 
-    print("Building the tree...")
     # Test with our classifier
-    tester = NeuralNet([3], num_inputs=4)
+    tester = NeuralNet([3], num_inputs=4, learning_rate=get_learning_rate(NeuralNet.get_default_learning_rate()))
     print(tester)
     tester.train(data=training_data, targets=training_target)
     print(tester)

@@ -46,7 +46,7 @@ class Perceptron(object):
 
 
 class NeuralNet(object):
-    def __init__(self, layer_params=[3], bias=-1, num_inputs=3):
+    def __init__(self, layer_params=[3], bias=-1, num_inputs=3, learning_rate=0.1):
         """
 
         :param layer_params: An array of the number of Neurons in each layer. (e.g. [3, 5, 1]
@@ -59,7 +59,7 @@ class NeuralNet(object):
         for i, layer in enumerate(layer_params):
             self.network.append([])
             for j in range(layer):
-                self.network[i].append(Perceptron(layer_params[(i - 1)] if i > 0 else num_inputs + 1, 0.3))
+                self.network[i].append(Perceptron(layer_params[(i - 1)] if i > 0 else num_inputs + 1, learning_rate))
         self.bias = bias
         self.num_inputs = num_inputs
 
@@ -71,6 +71,10 @@ class NeuralNet(object):
                 ret += neuron.__str__(j) + "\n"
             ret += "]\n"
         return ret
+
+    @staticmethod
+    def get_default_learning_rate():
+        return 0.1
 
     def check_output(self, output, target):
         if len(output) is 0:
@@ -86,6 +90,7 @@ class NeuralNet(object):
     def train(self, data, targets):
         for row in range(len(data)):
             layer_output = []
+            data[row].append(self.bias)
             for layer in range(len(self.network)):
                 print("Layer ", layer, " output: ")
                 layer_output.append([])
@@ -101,6 +106,7 @@ class NeuralNet(object):
     def predict(self, data):
         output = []
         for row in range(len(data)):
+            data[row].append(self.bias)
             output.append([])
             for layer in range(len(self.network)):
                 for index, neuron in enumerate(self.network[layer]):

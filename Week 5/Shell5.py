@@ -1,6 +1,10 @@
 import pandas as pd
 import random
 from sklearn import datasets
+from sklearn import preprocessing
+from sklearn import cross_validation
+from sklearn.datasets.base import Bunch
+from copy import deepcopy
 from neuralNetwork import NeuralNet
 
 
@@ -72,6 +76,7 @@ def load_pima_csv():
     pima = df.values
     data = SourceData()
     data.data, data.target = pima[:, :8], pima[:, 8]
+    data.data = preprocessing.normalize(data.data)
     target = []
     data_list = []
     for i in range(len(data.target)):
@@ -87,16 +92,17 @@ def load_pima_csv():
 
 def load_iris():
     iris = datasets.load_iris()
+    iris_data = preprocessing.normalize(iris.data)
     targets = []
     data_list = []
-    for i in range(len(iris.target)):
+    for i in range(len(iris_data)):
         if iris.target[i] == 0:
             targets.append([1, 0, 0])
         elif iris.target[i] == 1:
             targets.append([0, 1, 0])
         else:
             targets.append([0, 0, 1])
-        data_list.append(list(iris.data[i]))
+        data_list.append(list(iris_data[i]))
     data = SourceData()
     data.data, data.target = data_list, targets
     return data
@@ -126,46 +132,82 @@ def get_dataset():
         return load_pima_csv()
 
 
+def cross_validate(data, targets, classifier, num_folds=10):
+    accuracy = []
+    subset_size = len(data)/num_folds
+    for i in range(num_folds):
+        testing_data, testing_targets = data[i*subset_size:][:subset_size], targets[i*subset_size:][:subset_size]
+        training_data = data[:i*subset_size] + data[(i + 1)*subset_size]
+        training_targets = targets[:i*subset_size] + targets[(i + 1)*subset_size]
+        classifier.train(data=training_data, targets=training_targets)
+
+        result = classifier.predict(testing_data)
+
+        # Count the number right
+        num_right = 0
+        for predicted, actual in zip(result, testing_targets):
+            num_right += 1 if classifier.check_output(predicted, actual) else 0
+
+        accuracy.append(num_right / len(testing_targets))
+
+    overall_accuracy = 0
+    for a in accuracy:
+        overall_accuracy += a
+    overall_accuracy /= len(accuracy)
+
+    return overall_accuracy
+
 
 def main():
     source = get_dataset()
 
-    # Shuffle the data and target together
-    shuffled = list(zip(source.data, source.target))
+    train_data, test_data, train_targets, test_targets = cross_validation.train_test_split(source.data, source.target,
+                                                                                           test_size=1-get_split_percentage())
 
-    random.shuffle(shuffled)
+    train_bunch = Bunch()
+    train_bunch['data'], train_bunch['target'] = train_data, train_targets
+    train_permutations = []
+    test_permutations = []
 
-    # Separate out data and target
-    data_list, target_list = list(zip(*shuffled))
-
-    # Split arrays by length * percentage
-    data_split = int(len(data_list) * get_split_percentage())
-
-    # Split data
-    training_data = data_list[:data_split]
-    test_data = data_list[data_split:]
-
-    # Split target
-    training_target = target_list[:data_split]
-    test_target = target_list[data_split:]
+    for i in range(300):
+        temp_train = Bunch()
+        temp_test = Bunch()
+        temp_train['data'], temp_test['data'], temp_train['target'], temp_test['target'] = cross_validation.train_test_split(train_bunch.data, train_bunch.target, test_size=0.3)
+        train_permutations.append(temp_train)
+        test_permutations.append(temp_test)
 
     # Test with our classifier
-    tester = NeuralNet([len(training_target[0])],
-                       num_inputs=len(training_data),
+    tester = NeuralNet([4, len(train_permutations[0].target[0])],
+                       num_inputs=int(len(train_permutations[0].data[0])),
                        learning_rate=get_learning_rate(NeuralNet.get_default_learning_rate()))
-    print(tester)
-    tester.train(data=training_data, targets=training_target)
-    print(tester)
+
+    for epoch in range(len(train_permutations)):
+        tester.train(data=deepcopy(train_permutations[epoch].data), targets=deepcopy(train_permutations[epoch].target))
+
+        result = tester.predict(test_permutations[epoch].data)
+
+        # Count the number right
+        num_right = 0
+        for predicted, actual in zip(result, test_permutations[epoch].target):
+            num_right += 1 if tester.check_output(predicted, actual) else 0
+
+        accuracy = num_right * 100 / len(test_permutations[epoch].target)
+
+        # Show Accuracy
+        print("Epoch ", epoch, "Accuracy: %2.2f%%" % accuracy,)
 
     result = tester.predict(test_data)
 
     # Count the number right
     num_right = 0
-    for predicted, actual in zip(result, test_target):
+    for predicted, actual in zip(result, test_targets):
         num_right += 1 if tester.check_output(predicted, actual) else 0
 
+    accuracy = num_right * 100 / len(test_targets)
+
     # Show Accuracy
-    print("Accuracy: %2.2f%%" % (num_right * 100 / len(test_target)))
+    print("Final Accuracy: %2.2f%%" % accuracy, )
+
 
 if __name__ == "__main__":
     main()

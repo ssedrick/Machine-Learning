@@ -1,10 +1,8 @@
 import pandas as pd
-import random
 from sklearn import datasets
 from sklearn import preprocessing
 from sklearn import cross_validation
 from sklearn.datasets.base import Bunch
-from copy import deepcopy
 from neuralNetwork import NeuralNet
 
 
@@ -37,6 +35,26 @@ def get_learning_rate(default):
         return float(rate)
     else:
         return default
+
+
+def get_num_epochs():
+    rate = input("How many epochs should we run on the network? ")
+    if rate is not "":
+        return int(rate)
+    else:
+        return 200
+
+
+def get_hidden_layers(default):
+    num_layers = input("How many hidden layers should the network have? ")
+    if num_layers is not "":
+        layers = []
+        for i in range(int(num_layers)):
+            layers.append(int(input("Layer " + str(i) + " height? ")))
+        return layers
+    else:
+        return default
+
 
 
 def load_car_dataset():
@@ -81,9 +99,9 @@ def load_pima_csv():
     data_list = []
     for i in range(len(data.target)):
         if data.target[i] == 0:
-            target.append([0, 0, 1, 1])
+            target.append([0, 1])
         else:
-            target.append([1, 1, 0, 0])
+            target.append([1, 0])
         data_list.append(list(data.data[i]))
     data.target = target
     data.data = data_list
@@ -169,7 +187,9 @@ def main():
     train_permutations = []
     test_permutations = []
 
-    for i in range(300):
+    num_epochs = get_num_epochs()
+
+    for i in range(num_epochs):
         temp_train = Bunch()
         temp_test = Bunch()
         temp_train['data'], temp_test['data'], temp_train['target'], temp_test['target'] = cross_validation.train_test_split(train_bunch.data, train_bunch.target, test_size=0.3)
@@ -177,12 +197,14 @@ def main():
         test_permutations.append(temp_test)
 
     # Test with our classifier
-    tester = NeuralNet([4, len(train_permutations[0].target[0])],
+    size_hidden = get_hidden_layers([4])
+    tester = NeuralNet(size_hidden + [len(train_permutations[0].target[0])],
                        num_inputs=int(len(train_permutations[0].data[0])),
                        learning_rate=get_learning_rate(NeuralNet.get_default_learning_rate()))
 
-    for epoch in range(len(train_permutations)):
-        tester.train(data=deepcopy(train_permutations[epoch].data), targets=deepcopy(train_permutations[epoch].target))
+    num_100_percent = 0
+    for epoch in range(num_epochs):
+        tester.train(data=train_permutations[epoch].data, targets=train_permutations[epoch].target)
 
         result = tester.predict(test_permutations[epoch].data)
 
@@ -193,8 +215,13 @@ def main():
 
         accuracy = num_right * 100 / len(test_permutations[epoch].target)
 
+        if accuracy == 100:
+            num_100_percent += 1
+        if num_100_percent == 10:
+            break;
         # Show Accuracy
-        print("Epoch ", epoch, "Accuracy: %2.2f%%" % accuracy,)
+        if epoch % 50 == 0:
+            print("Epoch ", epoch, "Accuracy: %2.2f%%" % accuracy,)
 
     result = tester.predict(test_data)
 

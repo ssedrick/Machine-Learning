@@ -1,5 +1,4 @@
 import numpy as np
-from copy import deepcopy
 
 
 class Perceptron(object):
@@ -94,7 +93,7 @@ class Layer(object):
 
     def get_output(self, inputs):
         output = []
-        inputs.append(self.bias)
+        inputs += [self.bias]
         for index, neuron in enumerate(self.neurons):
             output.append(neuron.process(inputs))
         return output
@@ -180,11 +179,10 @@ class NeuralNet(object):
 
     def train(self, data, targets):
         for row in range(len(data)):
-            data_copy = deepcopy(data[row])
             layer_output = []
             for layer in range(len(self.layers)):
                 layer_output.append([])
-                layer_output[layer] = self.layers[layer].get_output(layer_output[layer - 1] if layer > 0 else data_copy)
+                layer_output[layer] = self.layers[layer].get_output(layer_output[layer - 1] if layer > 0 else data[row])
             # print("Data_train ", row, ": ", self)
             layer_forward_weights = []
             layer_forward_errors = []
@@ -193,7 +191,7 @@ class NeuralNet(object):
                     errors=targets[row] if layer == len(self.layers) - 1 else layer_forward_errors,
                     outputs=layer_output[layer],
                     layer_forward_weights=layer_forward_weights,
-                    inputs=layer_output[layer - 1] if layer != 0 else data_copy,
+                    inputs=layer_output[layer - 1] if layer != 0 else data[row],
                     is_hidden=True if layer != len(self.layers) - 1 else False)
             # print("Data_train_update ", row, ": ", self)
 

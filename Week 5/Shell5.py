@@ -3,6 +3,8 @@ from sklearn import datasets
 from sklearn import preprocessing
 from sklearn import cross_validation
 from sklearn.datasets.base import Bunch
+# from sklearn.neural_network import MLPClassifier as MLP
+from matplotlib import pyplot as plot
 from neuralNetwork import NeuralNet
 
 
@@ -108,6 +110,15 @@ def load_pima_csv():
     return data
 
 
+def load_pima_2_csv():
+    df = pd.read_csv('pima.csv')
+    pima = df.values
+    data = SourceData()
+    data.data, data.target = pima[:, :8], pima[:, 8]
+    data.data = preprocessing.normalize(data.data)
+    return data
+
+
 def load_iris():
     iris = datasets.load_iris()
     iris_data = preprocessing.normalize(iris.data)
@@ -178,9 +189,9 @@ def cross_validate(data, targets, classifier, num_folds=10):
 
 def main():
     source = get_dataset()
-
+    split_percent = get_split_percentage()
     train_data, test_data, train_targets, test_targets = cross_validation.train_test_split(source.data, source.target,
-                                                                                           test_size=1-get_split_percentage())
+                                                                                           test_size=1-split_percent)
 
     train_bunch = Bunch()
     train_bunch['data'], train_bunch['target'] = train_data, train_targets
@@ -198,11 +209,13 @@ def main():
 
     # Test with our classifier
     size_hidden = get_hidden_layers([4])
+    learn_rate = get_learning_rate(NeuralNet.get_default_learning_rate())
     tester = NeuralNet(size_hidden + [len(train_permutations[0].target[0])],
                        num_inputs=int(len(train_permutations[0].data[0])),
-                       learning_rate=get_learning_rate(NeuralNet.get_default_learning_rate()))
+                       learning_rate=learn_rate)
 
     num_100_percent = 0
+    training_accuracies = []
     for epoch in range(num_epochs):
         tester.train(data=train_permutations[epoch].data, targets=train_permutations[epoch].target)
 
@@ -218,8 +231,10 @@ def main():
         if accuracy == 100:
             num_100_percent += 1
         if num_100_percent == 10:
-            break;
+            break
         # Show Accuracy
+        if epoch % 25 == 0:
+            training_accuracies += [accuracy]
         if epoch % 50 == 0:
             print("Epoch ", epoch, "Accuracy: %2.2f%%" % accuracy,)
 
@@ -233,7 +248,32 @@ def main():
     accuracy = num_right * 100 / len(test_targets)
 
     # Show Accuracy
-    print("Final Accuracy: %2.2f%%" % accuracy, )
+    print("Final Accuracy: %2.2f%%" % accuracy)
+
+    plot.plot(training_accuracies, lw=3.0)
+    plot.title("Training Accuracies")
+    plot.xlabel("Epoch")
+    plot.ylabel("Accuracy")
+    plot.show()
+
+    """mlp = MLP(size_hidden, 'logistic', 'sgd', learning_rate_init=learn_rate, max_iter=num_epochs)
+
+    pima = load_pima_2_csv()
+    train_data, test_data, train_targets, test_targets = cross_validation.train_test_split(pima.data, pima.target,
+                                                                                           test_size=1-split_percent)
+    mlp.fit(train_data, train_targets)
+
+    result = mlp.predict(test_data)
+
+    # Count the number right
+    num_right = 0
+    for predicted, actual in zip(result, test_targets):
+        num_right += 1 if predicted == actual else 0
+
+    accuracy = num_right * 100 / len(test_targets)
+
+    # Show Accuracy
+    print("SKLearn Accuracy: %2.2f%%" % accuracy)"""
 
 
 if __name__ == "__main__":
